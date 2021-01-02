@@ -18,6 +18,11 @@ from sklearn.linear_model import RidgeCV
 from sklearn.metrics import accuracy_score
 from sklearn import svm
 import lightgbm as lgbm
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import AdaBoostRegressor
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import GridSearchCV
 from typing import List
 
@@ -50,9 +55,11 @@ if __name__ == '__main__':
     # load data
     wine = pd.read_csv('Wine_train.csv', sep=',')
     wine = wine.drop('X', axis=1)
-    features = wine.drop('quality', axis='columns').columns.tolist()    # 特征列表
-    X = wine.drop('quality', axis='columns')    # 特征
-    y = wine['quality']     # 标签
+    # wine = wine[wine['quality'] != 3]   # 去除极端值
+    # wine = wine[wine['quality'] != 9]
+    features = wine.drop('quality', axis='columns').columns.tolist()  # 特征列表
+    X = wine.drop('quality', axis='columns')  # 特征
+    y = wine['quality']  # 标签
 
     # split off some data for testing 分割训练集与测试集
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
@@ -93,7 +100,7 @@ if __name__ == '__main__':
     prediction = np.around(prediction, )
     print('ridge 模型准确率：', accuracy_score(prediction, y_test), '\n')
 
-    # knn k近邻
+    # knn k近邻回归
     best_model = Pipeline([('scale', StandardScaler()), ('knn', KNeighborsRegressor(n_neighbors=50)), ])
     # knn = KNeighborsRegressor()
     best_model.fit(X_train, y_train)
@@ -103,7 +110,7 @@ if __name__ == '__main__':
     prediction = np.around(prediction, )
     print('knn 模型准确率：', accuracy_score(prediction, y_test), '\n')
 
-    # Decision Tree Regressor 决策树
+    # Decision Tree Regressor 决策树回归
     best_model = DecisionTreeRegressor()
     best_model.fit(X_train, y_train)
     print('Mean Squared Error of Tuned Model on Test Set:')
@@ -112,7 +119,7 @@ if __name__ == '__main__':
     prediction = np.around(prediction, )
     print('Decision Tree Regressor 模型准确率：', accuracy_score(prediction, y_test), '\n')
 
-    # LGBM Regressor 基于学习算法的决策树
+    # LGBM Regressor 基于学习算法的决策树回归
     best_model = lgbm.LGBMRegressor()
     best_model.fit(X_train, y_train)
     print('Mean Squared Error of Tuned Model on Test Set:')
@@ -121,7 +128,7 @@ if __name__ == '__main__':
     prediction = np.around(prediction, )
     print('LGBM Regressor 模型准确率：', accuracy_score(prediction, y_test), '\n')
 
-    # SVM
+    # SVM 回归
     best_model = svm.SVR()
     best_model.fit(X_train, y_train)
     print('Mean Squared Error of Tuned Model on Test Set:')
@@ -129,6 +136,43 @@ if __name__ == '__main__':
     print(mean_squared_error(prediction, y_test))
     prediction = np.around(prediction, )
     print('SVM Regressor 模型准确率：', accuracy_score(prediction, y_test), '\n')
+
+    # RandomForest Regressor 随机森林回归
+    best_model = RandomForestRegressor(n_estimators=100, min_samples_split=5)
+    best_model.fit(X_train, y_train)
+    print('Mean Squared Error of Tuned Model on Test Set:')
+    prediction = best_model.predict(X_test)
+    print(mean_squared_error(prediction, y_test))
+    prediction = np.around(prediction, )
+    print('RandomForest Regressor 模型准确率：', accuracy_score(prediction, y_test), '\n')
+
+    # AdaBoost Regressor AdaBoost集成学习回归
+    best_model = AdaBoostRegressor(n_estimators=100)
+    best_model.fit(X_train, y_train)
+    print('Mean Squared Error of Tuned Model on Test Set:')
+    prediction = best_model.predict(X_test)
+    print(mean_squared_error(prediction, y_test))
+    prediction = np.around(prediction, )
+    print('AdaBoost Regressor 模型准确率：', accuracy_score(prediction, y_test), '\n')
+
+    # GradientBoosting Regressor GBRT 梯度数提升回归
+    best_model = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=1, random_state=0, loss='ls')
+    best_model.fit(X_train, y_train)
+    print('Mean Squared Error of Tuned Model on Test Set:')
+    prediction = best_model.predict(X_test)
+    print(mean_squared_error(prediction, y_test))
+    prediction = np.around(prediction, )
+    print('GBRT 梯度数提升 模型准确率：', accuracy_score(prediction, y_test), '\n')
+
+    # MLP Regressor 多层感知机回归
+    best_model = Pipeline([('scale', StandardScaler()), (
+        'MLPRegressor', MLPRegressor(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1))])
+    best_model.fit(X_train, y_train)
+    print('Mean Squared Error of Tuned Model on Test Set:')
+    prediction = best_model.predict(X_test)
+    print(mean_squared_error(prediction, y_test))
+    prediction = np.around(prediction, )
+    print('MLP Regressor 多层感知机回归 模型准确率：', accuracy_score(prediction, y_test), '\n')
 
     # Mean Squared Error of Tuned Model on Test Set:
     # 0.36693415598290596
@@ -157,3 +201,7 @@ if __name__ == '__main__':
     # Mean Squared Error of Tuned Model on Test Set:
     # 0.41262605958560605
     # LGBM Regressor 模型准确率： 0.6294871794871795
+    #
+    # Mean Squared Error of Tuned Model on Test Set:
+    # 0.6817774699147888
+    # SVM Regressor 模型准确率： 0.441025641025641
